@@ -1,0 +1,13 @@
+package com.adnan.springsqldemo.config;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class DatabaseCustomerRow {
+  private Long id;
+  private String fullName;
+  private String phoneNumber;
+  private String email;
+}

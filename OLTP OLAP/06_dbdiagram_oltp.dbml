@@ -1,0 +1,89 @@
+// =====================================================
+// DBDiagram.io - OLTP Schema
+// Case: Simple FIF-like Credit Application System
+// Purpose: normalized, operational transaction database
+// =====================================================
+
+Table branches {
+  id bigint [pk, increment]
+  branch_code varchar(20) [not null, unique]
+  branch_name varchar(100) [not null]
+  region varchar(100) [not null]
+  city varchar(100) [not null]
+}
+
+Table users {
+  id bigint [pk, increment]
+  branch_id bigint [not null, ref: > branches.id]
+  employee_number varchar(30) [not null, unique]
+  full_name varchar(100) [not null]
+  role varchar(50) [not null]
+}
+
+Table customers {
+  id bigint [pk, increment]
+  customer_number varchar(30) [not null, unique]
+  full_name varchar(100) [not null]
+  gender varchar(10) [not null]
+  city varchar(100) [not null]
+  monthly_income numeric(15,2) [not null]
+}
+
+Table dealers {
+  id bigint [pk, increment]
+  dealer_code varchar(20) [not null, unique]
+  dealer_name varchar(100) [not null]
+  city varchar(100) [not null]
+}
+
+Table vehicles {
+  id bigint [pk, increment]
+  brand varchar(50) [not null]
+  model varchar(100) [not null]
+  vehicle_type varchar(50) [not null]
+  price numeric(15,2) [not null]
+}
+
+Table credit_applications {
+  id bigint [pk, increment]
+  application_number varchar(30) [not null, unique]
+  customer_id bigint [not null, ref: > customers.id]
+  branch_id bigint [not null, ref: > branches.id]
+  dealer_id bigint [not null, ref: > dealers.id]
+  vehicle_id bigint [not null, ref: > vehicles.id]
+  surveyor_user_id bigint [not null, ref: > users.id]
+  application_date date [not null]
+  requested_amount numeric(15,2) [not null]
+  tenor_months int [not null]
+  status varchar(20) [not null]
+  approval_date date
+  disbursement_date date
+}
+
+Table installments {
+  id bigint [pk, increment]
+  application_id bigint [not null, ref: > credit_applications.id]
+  installment_no int [not null]
+  due_date date [not null]
+  principal_amount numeric(15,2) [not null]
+  interest_amount numeric(15,2) [not null]
+  total_due numeric(15,2) [not null]
+  status varchar(20) [not null]
+}
+
+Table payments {
+  id bigint [pk, increment]
+  installment_id bigint [not null, ref: > installments.id]
+  payment_date date [not null]
+  payment_channel varchar(30) [not null]
+  amount_paid numeric(15,2) [not null]
+}
+
+Table audit_logs {
+  id bigint [pk, increment]
+  application_id bigint [not null, ref: > credit_applications.id]
+  user_id bigint [not null, ref: > users.id]
+  activity_time timestamp [not null]
+  activity_type varchar(50) [not null]
+  notes text
+}

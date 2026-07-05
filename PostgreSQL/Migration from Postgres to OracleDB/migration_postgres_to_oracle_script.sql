@@ -1,0 +1,150 @@
+--CREATE USER fifapp_credit_db
+--IDENTIFIED BY fifapp123
+--DEFAULT TABLESPACE users
+--TEMPORARY TABLESPACE temp
+--QUOTA UNLIMITED ON users;
+--
+--GRANT CREATE SESSION TO fifapp_credit_db;
+--GRANT CREATE TABLE TO fifapp_credit_db;
+--GRANT CREATE VIEW TO fifapp_credit_db;
+--GRANT CREATE SEQUENCE TO fifapp_credit_db;
+--GRANT CREATE PROCEDURE TO fifapp_credit_db;
+
+-- PRIMARY KEY
+ALTER SESSION SET CURRENT_SCHEMA = FIFAPP_CREDIT_DB;
+
+SELECT constraint_name, constraint_type
+FROM all_constraints
+WHERE table_name = 'BRANCHES'
+AND owner = 'FIFAPP_CREDIT_DB';
+
+ALTER TABLE BRANCHES ADD CONSTRAINT PK_BRANCHES PRIMARY KEY (ID);
+ALTER TABLE USERS ADD CONSTRAINT PK_USERS PRIMARY KEY (ID);
+ALTER TABLE DEALERS ADD CONSTRAINT PK_DEALERS PRIMARY KEY (ID);
+ALTER TABLE CUSTOMERS ADD CONSTRAINT PK_CUSTOMERS PRIMARY KEY (ID);
+ALTER TABLE VEHICLES ADD CONSTRAINT PK_VEHICLES PRIMARY KEY (ID);
+ALTER TABLE CREDIT_APPLICATIONS ADD CONSTRAINT PK_CA PRIMARY KEY (ID);
+ALTER TABLE INSTALLMENTS ADD CONSTRAINT PK_INSTALLMENTS PRIMARY KEY (ID);
+ALTER TABLE PAYMENTS ADD CONSTRAINT PK_PAYMENTS PRIMARY KEY (ID);
+ALTER TABLE RISK_ASSESSMENTS ADD CONSTRAINT PK_RA PRIMARY KEY (ID);
+ALTER TABLE AUDIT_LOGS ADD CONSTRAINT PK_AUDIT PRIMARY KEY (ID);
+
+-- FOREIGN KEY
+ALTER TABLE USERS
+ADD CONSTRAINT FK_USERS_BRANCH
+FOREIGN KEY (BRANCH_ID)
+REFERENCES BRANCHES(ID);
+
+ALTER TABLE VEHICLES
+ADD CONSTRAINT FK_VEHICLES_DEALER
+FOREIGN KEY (DEALER_ID)
+REFERENCES DEALERS(ID);
+
+ALTER TABLE AUDIT_LOGS
+ADD CONSTRAINT FK_AUDIT_USER
+FOREIGN KEY (USER_ID)
+REFERENCES USERS(ID);
+
+ALTER TABLE CREDIT_APPLICATIONS
+ADD CONSTRAINT FK_CA_BRANCH
+FOREIGN KEY (BRANCH_ID)
+REFERENCES BRANCHES(ID);
+
+ALTER TABLE CREDIT_APPLICATIONS
+ADD CONSTRAINT FK_CA_USER
+FOREIGN KEY (CREATED_BY)
+REFERENCES USERS(ID);
+
+ALTER TABLE CREDIT_APPLICATIONS
+ADD CONSTRAINT FK_CA_CUSTOMER
+FOREIGN KEY (CUSTOMER_ID)
+REFERENCES CUSTOMERS(ID);
+
+ALTER TABLE CREDIT_APPLICATIONS
+ADD CONSTRAINT FK_CA_VEHICLE
+FOREIGN KEY (VEHICLE_ID)
+REFERENCES VEHICLES(ID);
+
+ALTER TABLE INSTALLMENTS
+ADD CONSTRAINT FK_INSTALLMENTS_CA
+FOREIGN KEY (CREDIT_APPLICATION_ID)
+REFERENCES CREDIT_APPLICATIONS(ID);
+
+ALTER TABLE PAYMENTS
+ADD CONSTRAINT FK_PAYMENTS_INSTALLMENT
+FOREIGN KEY (INSTALLMENT_ID)
+REFERENCES INSTALLMENTS(ID);
+
+ALTER TABLE PAYMENTS
+ADD CONSTRAINT FK_PAYMENTS_USER
+FOREIGN KEY (PAID_BY)
+REFERENCES USERS(ID);
+
+ALTER TABLE PAYMENTS
+ADD CONSTRAINT FK_PAYMENTS_INSTALLMENT
+FOREIGN KEY (INSTALLMENT_ID)
+REFERENCES INSTALLMENTS(ID);
+
+ALTER TABLE PAYMENTS
+ADD CONSTRAINT FK_PAYMENTS_USER
+FOREIGN KEY (PAID_BY)
+REFERENCES USERS(ID);
+
+ALTER TABLE RISK_ASSESSMENTS
+ADD CONSTRAINT FK_RA_USER
+FOREIGN KEY (ASSESSED_BY)
+REFERENCES USERS(ID);
+
+ALTER TABLE RISK_ASSESSMENTS
+ADD CONSTRAINT FK_RA_CA
+FOREIGN KEY (CREDIT_APPLICATION_ID)
+REFERENCES CREDIT_APPLICATIONS(ID);
+
+
+-- INDEX
+CREATE INDEX idx_audit_action ON audit_logs("action");
+CREATE INDEX idx_audit_created_at ON audit_logs(created_at);
+CREATE INDEX idx_audit_entity_entity ON audit_logs(entity_name, entity_id);
+CREATE INDEX idx_audit_user_id ON audit_logs(user_id);
+
+CREATE UNIQUE INDEX idx_branches_code ON branches(branch_code);
+
+CREATE INDEX idx_ca_application_date ON credit_applications(application_date);
+CREATE INDEX idx_ca_branch_id ON credit_applications(branch_id);
+CREATE INDEX idx_ca_branch_date_status ON credit_applications(branch_id, application_date, status);
+CREATE INDEX idx_ca_created_by ON credit_applications(created_by);
+CREATE INDEX idx_ca_customer_id ON credit_applications(customer_id);
+CREATE INDEX idx_ca_status ON credit_applications(status);
+CREATE INDEX idx_ca_vehicle_id ON credit_applications(vehicle_id);
+
+CREATE INDEX idx_customers_city ON customers(city);
+CREATE INDEX idx_customers_full_name ON customers(full_name);
+CREATE INDEX idx_customers_income_range ON customers(income_range);
+
+CREATE INDEX idx_dealers_city_region ON dealers(city, region);
+
+CREATE INDEX idx_inst_credit_app_id ON installments(credit_application_id);
+CREATE INDEX idx_inst_due_date ON installments(due_date);
+CREATE INDEX idx_inst_status ON installments(status);
+CREATE INDEX idx_inst_status_due ON installments(status, due_date);
+
+CREATE INDEX idx_pay_installment_id ON payments(installment_id);
+CREATE INDEX idx_pay_paid_by ON payments(paid_by);
+CREATE INDEX idx_pay_payment_date ON payments(payment_date);
+CREATE INDEX idx_pay_method_channel ON payments(payment_method, payment_channel);
+
+CREATE INDEX idx_ra_assessed_at ON risk_assessments(assessed_at);
+CREATE INDEX idx_ra_assessed_by ON risk_assessments(assessed_by);
+CREATE INDEX idx_ra_decision ON risk_assessments(decision);
+CREATE INDEX idx_ra_risk_level ON risk_assessments(risk_level);
+
+CREATE INDEX idx_veh_brand_model ON vehicles(brand, model);
+CREATE INDEX idx_veh_type_category ON vehicles(vehicle_type, vehicle_category);
+
+
+
+
+
+
+
+

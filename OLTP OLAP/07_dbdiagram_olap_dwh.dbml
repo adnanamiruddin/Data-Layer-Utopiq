@@ -1,0 +1,133 @@
+// =====================================================
+// DBDiagram.io - OLAP / DWH Star Schema
+// Case: Simple FIF-like Credit Application Analytics
+// Purpose: analytical historical database
+// =====================================================
+
+Table dim_date {
+  date_key int [pk] // YYYYMMDD
+  full_date date [not null, unique]
+  day_of_month int [not null]
+  month_number int [not null]
+  month_name varchar(20) [not null]
+  quarter_number int [not null]
+  year_number int [not null]
+}
+
+Table dim_branch {
+  branch_key bigint [pk, increment]
+  branch_id bigint [not null, unique] // source OLTP id
+  branch_code varchar(20) [not null]
+  branch_name varchar(100) [not null]
+  region varchar(100) [not null]
+  city varchar(100) [not null]
+}
+
+Table dim_user {
+  user_key bigint [pk, increment]
+  user_id bigint [not null, unique] // source OLTP id
+  employee_number varchar(30) [not null]
+  full_name varchar(100) [not null]
+  role varchar(50) [not null]
+  branch_code varchar(20) [not null]
+}
+
+Table dim_customer {
+  customer_key bigint [pk, increment]
+  customer_id bigint [not null, unique] // source OLTP id
+  customer_number varchar(30) [not null]
+  full_name varchar(100) [not null]
+  gender varchar(10) [not null]
+  city varchar(100) [not null]
+  income_band varchar(30) [not null]
+}
+
+Table dim_dealer {
+  dealer_key bigint [pk, increment]
+  dealer_id bigint [not null, unique] // source OLTP id
+  dealer_code varchar(20) [not null]
+  dealer_name varchar(100) [not null]
+  city varchar(100) [not null]
+}
+
+Table dim_vehicle {
+  vehicle_key bigint [pk, increment]
+  vehicle_id bigint [not null, unique] // source OLTP id
+  brand varchar(50) [not null]
+  model varchar(100) [not null]
+  vehicle_type varchar(50) [not null]
+  price_band varchar(30) [not null]
+}
+
+Table fact_credit_application {
+  application_fact_key bigint [pk, increment]
+  application_id bigint [not null, unique] // source OLTP id
+  application_number varchar(30) [not null]
+
+  application_date_key int [not null, ref: > dim_date.date_key]
+  approval_date_key int [ref: > dim_date.date_key]
+  disbursement_date_key int [ref: > dim_date.date_key]
+
+  customer_key bigint [not null, ref: > dim_customer.customer_key]
+  branch_key bigint [not null, ref: > dim_branch.branch_key]
+  dealer_key bigint [not null, ref: > dim_dealer.dealer_key]
+  vehicle_key bigint [not null, ref: > dim_vehicle.vehicle_key]
+  surveyor_user_key bigint [not null, ref: > dim_user.user_key]
+
+  status varchar(20) [not null]
+  requested_amount numeric(15,2) [not null]
+  tenor_months int [not null]
+  application_count int [not null]
+  approved_count int [not null]
+  rejected_count int [not null]
+  disbursed_count int [not null]
+}
+
+Table fact_installment {
+  installment_fact_key bigint [pk, increment]
+  installment_id bigint [not null, unique] // source OLTP id
+  application_id bigint [not null]
+  application_number varchar(30) [not null]
+
+  due_date_key int [not null, ref: > dim_date.date_key]
+  customer_key bigint [not null, ref: > dim_customer.customer_key]
+  branch_key bigint [not null, ref: > dim_branch.branch_key]
+
+  installment_no int [not null]
+  principal_amount numeric(15,2) [not null]
+  interest_amount numeric(15,2) [not null]
+  total_due numeric(15,2) [not null]
+  status varchar(20) [not null]
+  installment_count int [not null]
+  paid_installment_count int [not null]
+}
+
+Table fact_payment {
+  payment_fact_key bigint [pk, increment]
+  payment_id bigint [not null, unique] // source OLTP id
+  installment_id bigint [not null]
+  application_id bigint [not null]
+  application_number varchar(30) [not null]
+
+  payment_date_key int [not null, ref: > dim_date.date_key]
+  customer_key bigint [not null, ref: > dim_customer.customer_key]
+  branch_key bigint [not null, ref: > dim_branch.branch_key]
+
+  payment_channel varchar(30) [not null]
+  amount_paid numeric(15,2) [not null]
+  payment_count int [not null]
+}
+
+Table fact_audit_activity {
+  audit_fact_key bigint [pk, increment]
+  audit_id bigint [not null, unique] // source OLTP id
+  application_id bigint [not null]
+  application_number varchar(30) [not null]
+
+  activity_date_key int [not null, ref: > dim_date.date_key]
+  branch_key bigint [not null, ref: > dim_branch.branch_key]
+  user_key bigint [not null, ref: > dim_user.user_key]
+
+  activity_type varchar(50) [not null]
+  activity_count int [not null]
+}
